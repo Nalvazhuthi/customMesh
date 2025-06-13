@@ -25,6 +25,7 @@ const DwinzoMain = () => {
     ];
 
     const [drawMode, setDrawMode] = useState<'conveyor' | 'vehicle' | 'camera'>('conveyor');
+
     const [conveyorPaths, setConveyorPaths] = useState<THREE.Vector3[][]>(() => [predefinedPath]);
     const [vehiclePaths, setVehiclePaths] = useState<THREE.Vector3[][]>(() => [[]]);
     const [hoverPoint, setHoverPoint] = useState<THREE.Vector3 | null>(null);
@@ -34,6 +35,7 @@ const DwinzoMain = () => {
     const [isPlaying, setIsPlaying] = useState(false);
 
     const cameraControlsRef = useRef<CameraControls>(null);
+    console.log('cameraControlsRef: ', cameraControlsRef?.current?.enabled);
 
     const closestPointOnLineSegment = useCallback((a: THREE.Vector3, b: THREE.Vector3, p: THREE.Vector3): THREE.Vector3 => {
         const ab = b.clone().sub(a);
@@ -112,6 +114,7 @@ const DwinzoMain = () => {
     const handleCameraTargetDrag = useCallback((index: number, position: THREE.Vector3) => {
         const snapped = getSnappedPoint(position);
         if (cameraControlsRef.current) {
+
             cameraControlsRef.current.enabled = false;
         }
         setCameraTargets(prev => {
@@ -123,12 +126,14 @@ const DwinzoMain = () => {
 
     const handleCameraTargetDragStart = useCallback(() => {
         if (cameraControlsRef.current) {
+
             cameraControlsRef.current.enabled = false;
         }
     }, []);
 
     const handleCameraTargetDragEnd = useCallback(() => {
         if (cameraControlsRef.current) {
+
             cameraControlsRef.current.enabled = true;
         }
     }, []);
@@ -145,7 +150,7 @@ const DwinzoMain = () => {
     }, [activeCameraTarget]);
 
     const handleReachTarget = useCallback((target: THREE.Vector3) => {
-        console.log("Reached camera target at: ", target);
+
     }, []);
 
     useEffect(() => {
