@@ -3,6 +3,7 @@ import React from "react";
 import Scene from "./scene/Scene";
 import Draw from "./draw/draw";
 import DwinzoMain from "./dwinzoMain/dwinzoMain";
+import LandingScene from "./Mainscene/landingScene";
 
 const App: React.FC = () => {
   return (
@@ -11,7 +12,8 @@ const App: React.FC = () => {
       style={{ position: "relative", width: "100vw", height: "100vh" }}
     >
 
-      <DwinzoMain />
+      <LandingScene />
+      {/* <DwinzoMain /> */}
 
       {/* <Draw /> */}
       {/* <Scene /> */}

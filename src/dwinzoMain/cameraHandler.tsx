@@ -6,7 +6,7 @@ import * as THREE from 'three';
 interface CameraHandlerProps {
     conveyorPaths: THREE.Vector3[][];
     cameraTargets: THREE.Vector3[];
-    isPlaying: boolean;
+    isPlaying?: boolean;
     onReachTarget: (target: THREE.Vector3) => void;
     cameraControlsRef: React.RefObject<CameraControls | null>;
 }
@@ -113,9 +113,4 @@ const CameraHandler = ({
 
 export default CameraHandler;
 
-// the scroll should be smooth and of each scroll the camera move to camera target in convoyer path flow (camera should always move in isometric view )
-// if there are 3 camera targets
-// after user press play 
-// camera focus to first target 
-// and on second scroll camera should smoothly move to secondad target and look at the second target 
-// and same for all points
+
