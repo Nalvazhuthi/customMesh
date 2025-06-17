@@ -7,12 +7,15 @@ type ModelType = {
     id: string;
     path: string;
     position: THREE.Vector3;
+    rotation: THREE.Vector3;
+    vehiclePath?: THREE.Vector3[]; // Add this line
 };
 
 type GLTFModelProps = {
     id: string;
     path: string;
     position: THREE.Vector3;
+    rotation: THREE.Vector3;
     isSelected: boolean;
     onClick: () => void;
     onUpdatePosition: (id: string, pos: THREE.Vector3) => void;
@@ -24,13 +27,14 @@ const GLTFModel = memo(
         id,
         path,
         position,
+        rotation,
         isSelected,
         onClick,
         onUpdatePosition,
         cameraControlsRef,
     }: GLTFModelProps) => {
         const { scene } = useGLTF(path);
-        const ref = useRef<THREE.Object3D>(null);
+        const ref = useRef<THREE.Group>(null);
         const [model, setModel] = useState<THREE.Object3D | null>(null);
         const [dragging, setDragging] = useState(false);
 
@@ -63,22 +67,27 @@ const GLTFModel = memo(
         return (
             <>
                 {model && (
-                    <primitive
-                        object={model}
-                        position={position}
+                    <group
                         ref={ref}
+                        position={position}
+                        rotation={new THREE.Euler(rotation.x, rotation.y, rotation.z)}
                         onClick={(e: ThreeEvent<MouseEvent>) => {
                             e.stopPropagation();
+                            console.log('id: ', id);
+                            if (id === 'amr_console_vehicle') {
+                                console.log('amr console vehicle clicked');
+                            }
                             onClick();
                         }}
-                        dispose={null}
-                    />
+                    >
+                        <primitive object={model} dispose={null} />
+                    </group>
                 )}
                 {isSelected && ref.current && (
                     <TransformControls
                         object={ref.current}
                         mode="translate"
-                        onMouseDown={(e) => setDragging(true)}
+                        onMouseDown={() => setDragging(true)}
                         onMouseUp={() => setDragging(false)}
                     />
                 )}
@@ -89,12 +98,16 @@ const GLTFModel = memo(
 
 // Scene Component
 const Scene = ({
+    vehiclePaths,
     models,
     setModels,
     selectedId,
     setSelectedId,
     cameraControlsRef,
+    setDrawMode
 }: {
+    vehiclePaths: any;
+    setDrawMode: any;
     models: ModelType[];
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
@@ -109,16 +122,34 @@ const Scene = ({
         );
     };
 
+    const handleSelectModel = (id: string, path: string) => {
+        setSelectedId(id);
+        const splitPath = path.split("/");
+        const modelName = splitPath[splitPath.length - 1];
+
+        if (modelName === "amr.glb") {
+            // Find the model in the models array
+            const model = models.find(m => m.id === id);
+            if (model) {
+                // If this AMR already has a path, you could do something with it here
+                console.log('AMR vehicle path:', model.vehiclePath);
+                console.log("vehiclePaths", vehiclePaths);
+                // You might want to set the draw mode to vehicle here
+                setDrawMode('vehicle');
+            }
+        }
+    }
+
     return (
         <>
-            {/* Models */}
             {models.map((model) => (
                 <Suspense fallback={null} key={model.id}>
                     <GLTFModel
                         id={model.id}
                         path={model.path}
                         position={model.position}
-                        onClick={() => setSelectedId(model.id)}
+                        rotation={model.rotation}
+                        onClick={() => handleSelectModel(model.id, model.path)}
                         isSelected={selectedId === model.id}
                         onUpdatePosition={handleUpdatePosition}
                         cameraControlsRef={cameraControlsRef}
@@ -130,3 +161,6 @@ const Scene = ({
 };
 
 export default Scene;
+
+
+// store the Draw Vehicle Path for that model amr

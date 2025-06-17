@@ -9,6 +9,8 @@ import CameraTarget from '../dwinzoMain/CameraTarget';
 import MeshVehicle from './meshVehicle';
 import MeshConvoyer from "../components/meshConvoyer";
 import CameraHandler from '../dwinzoMain/cameraHandler';
+import CameraPathHandler from './cameraPathHandler';
+import { useControls } from 'leva';
 
 
 // Constants
@@ -32,13 +34,127 @@ type ModelType = {
     id: string;
     path: string;
     position: THREE.Vector3;
+    rotation: THREE.Vector3;
 };
 
 // Main Scene
 const LandingScene = () => {
 
-    const [conveyorPaths, setConveyorPaths] = useState<THREE.Vector3[][]>([[]]);
-    const [models, setModels] = useState<ModelType[]>([]);
+    const initialPath = [
+        {
+            "x": -7.572614605838736,
+            "y": 9.266932307971994e-16,
+            "z": -4.1734552889050285
+        },
+        {
+            "x": -7.572614605838736,
+            "y": -1.2052158276056684e-15,
+            "z": 5.427809552105912
+        },
+        {
+            "x": 0.04645771263356477,
+            "y": -1.256794221847114e-15,
+            "z": 5.427809552105912
+        },
+        {
+            "x": 0.04645771263356477,
+            "y": 1.781514684555345e-15,
+            "z": -0.02322886951851932
+        },
+        {
+            "x": -3.6391894620940666,
+            "y": -5.3297731866193286e-17,
+            "z": -0.02322886951851932
+        },
+        {
+            "x": -3.6391894620940666,
+            "y": 8.957461345385912e-16,
+            "z": -4.034081957726562
+        },
+        {
+            "x": 4.227655948018431,
+            "y": 8.957461345385912e-16,
+            "z": -4.034081957726562
+        },
+        {
+            "x": 4.227655948018431,
+            "y": -1.1811459094729615e-15,
+            "z": 5.319408277772615
+        },
+        {
+            "x": 10.282640842089634,
+            "y": -1.1605145506581508e-15,
+            "z": 5.319408277772615
+        }
+    ];
+    // Initial state setup
+    const initialModelsData = [
+        {
+            id: "b0aed40a-f8c1-4e30-b6ec-aa4731c6c0ef",
+            path: "/models/armbot.glb",
+            position: { x: -9.446406915583562, y: 0, z: -3.59122080177313 },
+            rotation: { x: 0, y: Math.PI, z: 0 }
+        },
+        {
+            id: "e9f61d57-714a-4541-964f-22a9399259db",
+            path: "/models/armbot.glb",
+            position: { x: -4.910032894487931, y: 0, z: -0.6964224752601509 },
+            rotation: { x: 0, y: Math.PI, z: 0 }
+        },
+        {
+            id: "f8554834-d1b3-4062-afb8-2c3fb799931c",
+            path: "/models/armbot.glb",
+            position: { x: -2.5069028549687555, y: 0, z: -2.5611027035754006 },
+            rotation: { x: 0, y: 0, z: 0 }
+        },
+        {
+            id: "64890ad0-1918-464a-8ada-44f1df33f253",
+            path: "/models/edm.glb",
+            position: { x: -3.5502168759690558, y: 0, z: 8.054354605555346 },
+            rotation: { x: 0, y: Math.PI, z: 0 }
+        },
+        {
+            id: "db9942da-575f-4bb4-889a-3eceb9346558",
+            path: "/models/cnc.glb",
+            position: { x: 6.3352095790228145, y: 0, z: 0.18696000717918393 },
+            rotation: { x: 0, y: Math.PI, z: 0 }
+        },
+        {
+            id: "8daf0f58-94a0-465d-ae1f-3a00aebade9d",
+            path: "/models/amr.glb",
+            position: { x: 7.200256816800632, y: 0, z: 7.844868264258275 },
+            rotation: { x: 0, y: 0, z: 0 }
+        },
+        {
+            id: "03565574-471a-47c3-bb1b-fcd42761d78a",
+            path: "/models/armbot.glb",
+            position: { x: 9.529805878362478, y: 0, z: 3.780254141996655 },
+            rotation: { x: 0, y: Math.PI * 0.5, z: 0 }
+        }
+    ];
+
+    const { offsetX, offsetY, offsetZ, moveSpeed } = useControls('Camera Offset', {
+        offsetX: { value: 1.3, min: -5, max: 5, step: 0.1 },
+        offsetY: { value: 4, min: -10, max: 10, step: 0.1 },
+        offsetZ: { value: 3.5, min: -5, max: 5, step: 0.1 },
+        moveSpeed: { value: 0.05, min: 0.005, max: 1, step: 0.001 },
+
+    });
+
+    // Convert to THREE.Vector3[]
+    const convertedPath = initialPath.map(point => new THREE.Vector3(point.x, point.y, point.z));
+    const [conveyorPaths, setConveyorPaths] = useState<THREE.Vector3[][]>([convertedPath]);
+    const [cameraPath, setCameraPath] = useState<THREE.Vector3[]>(convertedPath);
+    const createVector3 = (obj: { x: number; y: number; z: number }) => new THREE.Vector3(obj.x, obj.y, obj.z);
+
+    // const [models, setModels] = useState<ModelType[]>([]);
+    const [models, setModels] = useState<ModelType[]>(
+        initialModelsData.map(model => ({
+            ...model,
+            position: createVector3(model.position),
+            rotation: createVector3(model.rotation),
+        }))
+    );
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [drawMode, setDrawMode] = useState<'conveyor' | 'vehicle' | 'camera'>('conveyor');
     const [vehiclePaths, setVehiclePaths] = useState<THREE.Vector3[][]>([]);
@@ -46,18 +162,20 @@ const LandingScene = () => {
     const [cameraTargets, setCameraTargets] = useState<THREE.Vector3[]>([]);
     const [activeCameraTarget, setActiveCameraTarget] = useState<number | null>(null);
     const [isCtrlPressed, setIsCtrlPressed] = useState(false);
-
     const cameraControlsRef = useRef<CameraControls>(null);
+
+    const [isPlaying, setIsPlaying] = useState(false);
 
     const handleAddModel = (name: string) => {
         const asset = ASSET_LIST.find((a) => a.name === name);
         if (!asset) return;
 
         const position = new THREE.Vector3(0, 0, 0);
+        const rotation = new THREE.Vector3(0, 0, 0);
 
         setModels((prev) => [
             ...prev,
-            { id: uuidv4(), path: asset.path, position },
+            { id: uuidv4(), path: asset.path, position, rotation },
         ]);
     };
 
@@ -107,9 +225,10 @@ const LandingScene = () => {
     const handleClick = useCallback((point: THREE.Vector3) => {
         const snapped = getSnappedPoint(point);
         if (drawMode === 'camera') {
-            setCameraTargets(prev => [...prev, snapped]);
+            setCameraPath(prev => [...prev, snapped]);
             return;
         }
+
 
         const updater = drawMode === 'conveyor' ? setConveyorPaths : setVehiclePaths;
         updater(prev => {
@@ -147,7 +266,7 @@ const LandingScene = () => {
 
     const handleCameraTargetDrag = useCallback((index: number, position: THREE.Vector3) => {
         const snapped = getSnappedPoint(position);
-        if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
+        // if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
         setCameraTargets(prev => {
             const updated = [...prev];
             updated[index] = snapped;
@@ -156,7 +275,7 @@ const LandingScene = () => {
     }, [getSnappedPoint]);
 
     const handleCameraTargetDragStart = useCallback(() => {
-        if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
+        // if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
     }, []);
 
     const handleCameraTargetDragEnd = useCallback(() => {
@@ -221,6 +340,8 @@ const LandingScene = () => {
                 <button onClick={() => setDrawMode('conveyor')}>Conveyor Mode</button>
                 <button onClick={() => setDrawMode('vehicle')}>Vehicle Mode</button>
                 <button onClick={() => setDrawMode('camera')}>Camera Target</button>
+                <button onClick={() => setIsPlaying(true)}>Play Camera Path</button>
+
                 <div>Current Mode: <strong>{drawMode}</strong></div>
                 {drawMode === 'camera' && (
                     <div>
@@ -288,20 +409,36 @@ const LandingScene = () => {
                     />
 
                     <Scene
+                        setDrawMode={setDrawMode}
+                        vehiclePaths={vehiclePaths}
                         models={models}
                         selectedId={selectedId}
                         setSelectedId={setSelectedId}
                         setModels={setModels}
                         cameraControlsRef={cameraControlsRef}
                     />
-        
+
                     <CameraHandler
                         conveyorPaths={conveyorPaths}
                         cameraTargets={cameraTargets}
                         onReachTarget={handleReachTarget}
                         cameraControlsRef={cameraControlsRef}
                     />
-                    {/* <OrbitControls /> */}
+                    {cameraPath.length >= 2 && (
+                        <Line points={cameraPath} color="orange" lineWidth={2} />
+                    )}
+
+                    <CameraPathHandler
+                        cameraPath={cameraPath}
+                        cameraTargets={cameraTargets}
+                        isPlaying={isPlaying}
+                        onEnd={() => setIsPlaying(false)}
+                        cameraControlsRef={cameraControlsRef}
+                        offset={new THREE.Vector3(offsetX, offsetY, offsetZ)}
+                        moveSpeed={moveSpeed}
+                    />
+
+
                     <axesHelper />
                 </Canvas>
             </div>
@@ -310,7 +447,3 @@ const LandingScene = () => {
 };
 
 export default LandingScene;
-
-
-
-

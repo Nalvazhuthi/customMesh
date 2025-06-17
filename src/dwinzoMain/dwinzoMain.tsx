@@ -101,7 +101,7 @@ const DwinzoMain = () => {
 
     const handleCameraTargetDrag = useCallback((index: number, position: THREE.Vector3) => {
         const snapped = getSnappedPoint(position);
-        if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
+        // if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
         setCameraTargets(prev => {
             const updated = [...prev];
             updated[index] = snapped;
@@ -110,7 +110,7 @@ const DwinzoMain = () => {
     }, [getSnappedPoint]);
 
     const handleCameraTargetDragStart = useCallback(() => {
-        if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
+        // if (cameraControlsRef.current) cameraControlsRef.current.enabled = false;
     }, []);
 
     const handleCameraTargetDragEnd = useCallback(() => {
